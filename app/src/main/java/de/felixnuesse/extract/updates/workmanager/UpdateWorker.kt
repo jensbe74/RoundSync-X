@@ -49,7 +49,7 @@ class UpdateWorker (private var mContext: Context, workerParams: WorkerParameter
 
         val source =  GithubTagSource(
             ownerUsername = "jensbe74",
-            repoName = "Round-Sync",
+            repoName = "RoundSync-X",
             currentVersion = BuildConfig.VERSION_NAME
         )
 
