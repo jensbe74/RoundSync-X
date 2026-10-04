@@ -48,6 +48,10 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
     private lateinit var syncDirection: Spinner
     private lateinit var fab: FloatingActionButton
 
+    private lateinit var minAgeContainer: View
+    private lateinit var minAgeValue: EditText
+    private lateinit var minAgeUnit: Spinner
+
     private lateinit var switchWifi: Switch
     private lateinit var switchMD5sum: Switch
 
@@ -127,6 +131,9 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
         remoteDropdown = findViewById(R.id.task_remote_spinner)
         syncDirection = findViewById(R.id.task_direction_spinner)
         syncDescription = findViewById(R.id.descriptionSyncDirection)
+        minAgeContainer = findViewById(R.id.task_min_age_container)
+        minAgeValue = findViewById(R.id.task_min_age_value)
+        minAgeUnit = findViewById(R.id.task_min_age_unit)
         filterDropdown = findViewById(R.id.task_filter_spinner)
         switchDeleteExcluded = findViewById(R.id.task_exclude_delete_toggle)
         onFailDropdown = findViewById(R.id.task_onFail_spinner)
@@ -176,6 +183,7 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
         switchWifi.isChecked = existingTask?.wifionly ?: false
         switchMD5sum.isChecked = existingTask?.md5sum ?: false
         switchDeleteExcluded.isChecked = existingTask?.deleteExcluded ?: false
+        prepareMinAge()
         prepareSyncDirectionDropdown()
         prepareLocal()
         prepareRemote()
@@ -238,7 +246,7 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
         taskToPopulate.title = findViewById<EditText>(R.id.task_title_textfield).text.toString()
         val remotename = remoteDropdown.selectedItem.toString()
         taskToPopulate.remoteId = remotename
-        val direction = syncDirection.selectedItemPosition + 1
+        val direction = selectedDirection()
         for (ri in rcloneInstance.remotes) {
             if (ri.name == taskToPopulate.remoteId) {
                 taskToPopulate.remoteType = ri.type
@@ -254,6 +262,20 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
         taskToPopulate.filterId = if(filterDropdown.selectedItemPosition == 0 || filterDropdown.selectedItemPosition == -1) null else filterItems[filterDropdown.selectedItemPosition - 1].id
         taskToPopulate.onFailFollowup = (onFailDropdown.selectedItem as TaskNameIdPair).id
         taskToPopulate.onSuccessFollowup = (onSuccessDropdown.selectedItem as TaskNameIdPair).id
+
+        if (SyncDirectionObject.isCopyDeleteOld(direction)) {
+            val minAge = getMinAgeValue()
+            if (minAge == null) {
+                Toasty.error(
+                    this.applicationContext,
+                    getString(R.string.task_data_validation_error_no_min_age),
+                    Toast.LENGTH_SHORT,
+                    true
+                ).show()
+                return null
+            }
+            taskToPopulate.minAge = minAge
+        }
 
         // Verify if data is completed
         if (localPath.text.toString() == "") {
@@ -486,12 +508,51 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
                 position: Int,
                 id: Long
             ) {
-                updateSpinnerDescription(position + 1)
+                updateSpinnerDescription(SyncDirectionObject.SELECTABLE_DIRECTIONS[position])
             }
 
             override fun onNothingSelected(adapterView: AdapterView<*>?) {}
         }
-        syncDirection.setSelection((((existingTask?.direction?.minus(1)) ?: 0)) )
+        val existingIndex = SyncDirectionObject.SELECTABLE_DIRECTIONS.indexOf(existingTask?.direction ?: -1)
+        syncDirection.setSelection(if (existingIndex >= 0) existingIndex else 0)
+    }
+
+    private fun selectedDirection(): Int {
+        val position = syncDirection.selectedItemPosition
+        return SyncDirectionObject.SELECTABLE_DIRECTIONS[if (position in SyncDirectionObject.SELECTABLE_DIRECTIONS.indices) position else 0]
+    }
+
+    private fun prepareMinAge() {
+        val unitLabels = arrayOf(
+            getString(R.string.task_min_age_unit_minutes),
+            getString(R.string.task_min_age_unit_hours),
+            getString(R.string.task_min_age_unit_days),
+            getString(R.string.task_min_age_unit_years)
+        )
+        minAgeUnit.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, unitLabels)
+        minAgeUnit.setSelection(MIN_AGE_UNIT_DAYS_INDEX)
+
+        // restore e.g. "30d" from an existing task
+        val existing = existingTask?.minAge
+        if (existing != null && existing.length > 1) {
+            val unitIndex = MIN_AGE_UNIT_SUFFIXES.indexOf(existing.last())
+            val amount = existing.dropLast(1)
+            if (unitIndex >= 0 && amount.all { it.isDigit() }) {
+                minAgeValue.setText(amount)
+                minAgeUnit.setSelection(unitIndex)
+            }
+        }
+    }
+
+    /**
+     * @return the rclone duration (e.g. "30d"), or null if no valid age greater than 0 was entered
+     */
+    private fun getMinAgeValue(): String? {
+        val amount = minAgeValue.text.toString().trim().toLongOrNull()
+        if (amount == null || amount <= 0) {
+            return null
+        }
+        return "$amount${MIN_AGE_UNIT_SUFFIXES[minAgeUnit.selectedItemPosition]}"
     }
 
     private fun updateSpinnerDescription(value: Int) {
@@ -507,7 +568,13 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
                 getString(R.string.description_sync_direction_copy_tolocal)
             SyncDirectionObject.SYNC_BIDIRECTIONAL -> text =
                 getString(R.string.description_sync_direction_sync_bidirectional)
+            SyncDirectionObject.COPY_DELETE_OLD_LOCAL_TO_REMOTE -> text =
+                getString(R.string.description_sync_direction_copy_delete_old_toremote)
+            SyncDirectionObject.COPY_DELETE_OLD_REMOTE_TO_LOCAL -> text =
+                getString(R.string.description_sync_direction_copy_delete_old_tolocal)
         }
+        minAgeContainer.visibility =
+            if (SyncDirectionObject.isCopyDeleteOld(value)) View.VISIBLE else View.GONE
         syncDescription.text = text
     }
 
@@ -516,6 +583,10 @@ class TaskActivity : AppCompatActivity(), FolderSelectorCallback{
         const val REQUEST_CODE_FP_LOCAL = 500
         const val REQUEST_CODE_FP_REMOTE = 444
         const val REQUEST_CODE_FILTER = 333
+
+        // rclone duration suffixes, in the order of the unit spinner (m = minutes, not months)
+        private val MIN_AGE_UNIT_SUFFIXES = charArrayOf('m', 'h', 'd', 'y')
+        private const val MIN_AGE_UNIT_DAYS_INDEX = 2
 
     }
 

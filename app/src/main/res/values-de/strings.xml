@@ -21,6 +21,8 @@
     <string name="app_version">App-Version</string>
     <string name="rclone_version">Rclone-Version</string>
     <string name="changelog">Versionsprotokoll</string>
+    <string name="fork_description">Dies ist ein Fork von Round Sync von newhinton. Er ergänzt die Aufgabentypen „Kopieren, dann alte Dateien löschen“ (lokal nach entfernt und entfernt nach lokal).</string>
+    <string name="fork_on_github">Fork auf GitHub</string>
     <string name="license_and_contributors">Lizenz und Mitwirkende</string>
     <string name="credits_libraries">Bibliotheken und Danksagungen</string>
     <string name="star_on_github">Auf GitHub markieren</string>
@@ -297,6 +299,8 @@
     <string name="importer_unknown_error">Unbekannter Fehler beim Importieren!</string>
     <string name="sync_direction_copy_local_remote">Kopiere von lokalem Speicher zu entferntem Speicher</string>
     <string name="sync_direction_copy_remote_local">Kopiere von entferntem Speicher nach lokalem Speicher</string>
+    <string name="sync_direction_copy_delete_old_local_remote">Kopiere lokal nach entfernt, dann alte lokale Dateien löschen</string>
+    <string name="sync_direction_copy_delete_old_remote_local">Kopiere entfernt nach lokal, dann alte entfernte Dateien löschen</string>
     <string name="copy">Kopieren</string>
     <string name="operation_success">%s war erfolgreich</string>
     <plurals name="operation_success_description">
@@ -435,6 +439,16 @@
     <string name="description_sync_direction_sync_toremote">Synchronisieren Sie Dateien vom lokalen Speicher auf den entfernten Speicher. Alle Dateien, die lokal nicht vorhanden sind, werden auf dem entfernten Speicher gelöscht. Dies betrifft nur die Dateien auf dem entfernten Speicher.</string>
     <string name="description_sync_direction_copy_toremote">Kopiere neue oder geänderte Dateien vom lokalen Speicher zum entfernten Speicher. Dateien werden nicht gelöscht, bestehende Dateien auf dem entfernten Speicher können überschrieben werden.</string>
     <string name="description_sync_direction_copy_tolocal">Kopiere neue oder geänderte Dateien vom entfernten Speicher zum lokalen Speicher. Dateien werden nicht gelöscht, bestehende Dateien auf dem lokalen Speicher können überschrieben werden.</string>
+    <string name="description_sync_direction_copy_delete_old_toremote">Kopiert alle Dateien vom lokalen auf den entfernten Speicher. Danach werden lokale Dateien gelöscht, die älter als das angegebene Alter sind – aber nur, wenn sie nachweislich auf dem entfernten Speicher liegen (Prüfsummen werden verglichen). Neuere Dateien bleiben erhalten.</string>
+    <string name="description_sync_direction_copy_delete_old_tolocal">Kopiert alle Dateien vom entfernten auf den lokalen Speicher. Danach werden Dateien auf dem entfernten Speicher gelöscht, die älter als das angegebene Alter sind – aber nur, wenn sie nachweislich lokal vorhanden sind (Prüfsummen werden verglichen). Neuere Dateien bleiben erhalten.</string>
+    <string name="task_edit_label_min_age">Quelldateien löschen, die älter sind als</string>
+    <string name="task_min_age_hint">Alter</string>
+    <string name="task_min_age_unit_minutes">Minuten</string>
+    <string name="task_min_age_unit_hours">Stunden</string>
+    <string name="task_min_age_unit_days">Tage</string>
+    <string name="task_min_age_unit_years">Jahre</string>
+    <string name="task_data_validation_error_no_min_age">Bitte ein Alter größer als 0 angeben</string>
+    <string name="copy_delete_old">Kopieren + alte löschen</string>
     <string name="description_sync_direction_sync_bidirectional">Stellt sicher das lokaler und entfernter Speicher identisch sind. Dateien werden gelöscht, geupdated und erstellt nach Bedarf.</string>
     <string name="intro_success">Erfolg!</string>
     <string name="dynamic_config_unknown_error">Der Anbieter ist unbekannt!</string>

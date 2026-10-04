@@ -52,6 +52,7 @@ public class AboutActivity extends AppCompatActivity {
         findViewById(R.id.star_on_github).setOnClickListener(v -> openAppGitHubLink());
         findViewById(R.id.report_bug).setOnClickListener(v -> reportBug());
         findViewById(R.id.author_github_link).setOnClickListener(v -> openAuthorGitHubLink());
+        findViewById(R.id.fork_github_link).setOnClickListener(v -> openForkGitHubLink());
         findViewById(R.id.maintainer_github_link).setOnClickListener(v -> openMaintainerGithubLink());
         findViewById(R.id.old_maintainer_github_link).setOnClickListener(v -> openOldMaintainerGithubLink());
     }
@@ -89,6 +90,11 @@ public class AboutActivity extends AppCompatActivity {
 
     private void reportBug() {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.github_issue_url)));
+        tryStartActivity(this, browserIntent);
+    }
+
+    private void openForkGitHubLink() {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.github_fork_url)));
         tryStartActivity(this, browserIntent);
     }
 

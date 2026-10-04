@@ -21,6 +21,8 @@ data class Task(var id: Long) {
     var deleteExcluded = false
     var onFailFollowup: Long? = null
     var onSuccessFollowup: Long? = null
+    // rclone duration (e.g. "30d"); only used by the "copy, then delete old files in source" directions
+    var minAge: String? = null
 
     override fun toString(): String {
         return "$title: $remoteId: $remoteType: $remotePath: $localPath: $direction"
@@ -41,6 +43,7 @@ data class Task(var id: Long) {
         var COLUMN_NAME_DELETE_EXCLUDED = "task_delete_excluded"
         var COLUMN_NAME_ONFAIL_FOLLOWUP = "task_onFailFollowupTask"
         var COLUMN_NAME_ONSUCCESS_FOLLOWUP = "task_onSuccessFollowupTask"
+        var COLUMN_NAME_MIN_AGE = "task_min_age"
 
         const val TASK_MD5SUM_DEFAULT = false
         const val TASK_WIFIONLY_DEFAULT = false

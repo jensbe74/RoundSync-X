@@ -5,6 +5,8 @@
 [![Android Lint](https://github.com/newhinton/Round-Sync/actions/workflows/lint.yml/badge.svg)](https://github.com/newhinton/Round-Sync/actions/workflows/lint.yml)
 
 A cloud file manager, powered by rclone.
+
+> **Fork notice:** This is a fork of [newhinton/Round-Sync](https://github.com/newhinton/Round-Sync), maintained by [jensbe74](https://github.com/jensbe74). It adds the task type [Copy + delete old files](#copy--delete-old-files-fork-addition). The in-app *About* screen shows this fork information as well.
 Visit [https://roundsync.com](https://roundsync.com) for more information!
 
 
@@ -39,6 +41,7 @@ Visit [https://roundsync.com](https://roundsync.com) for more information!
 - **Storage Access Framework (SAF)** ([see docs](https://roundsync.com/usage/saf.html)) for SD card and USB device access.
 - **Intentservice** to start tasks via third party apps!
 - **Task Management** to allow regular runs of your important tasks!
+- **Copy + delete old files** (fork addition): a task type that copies everything to the target and afterwards deletes files in the source that are older than a configurable age (minutes, hours, days or years), but only if they are verified at the target (checksums are compared). Available for local → remote and remote → local. See [Copy + delete old files](#copy--delete-old-files-fork-addition).
 
 
 ## Installation
@@ -63,6 +66,19 @@ If you don't know which version to pick use ```roundsync-<version>-universal-rel
 ## Usage
 [See the documentation](https://roundsync.com/).
 
+
+## Copy + delete old files (fork addition)
+Besides *Sync* and *Copy*, a task can use one of the directions *Copy local to remote, then delete old local files* or *Copy remote to local, then delete old remote files*. Set the age ("Delete source files older than") in minutes, hours, days or years.
+
+A run works in two steps:
+1. `rclone copy` copies **all** files and folders to the target (filters apply).
+2. Only if step 1 finished without errors, `rclone move --min-age <age> --checksum` removes source files older than the age. rclone deletes a source file only after it was verified at the target, or if an identical file was already there. Newer files stay untouched.
+
+Notes:
+- The age refers to the **modification time of the source file**, not the creation or run date.
+- Checksums are always compared in the second step, independent of the task's checksum option. Remotes without a common hash with the source may therefore leave files undeleted.
+- An age greater than 0 is required.
+- Empty source folders are not removed.
 
 ## Intents
 This app includes the ability to launch an intent! Create a task to sync to a remote, and copy it's id (via the treedot-menu)
@@ -100,7 +116,7 @@ If you want to add more translations, see our [weblate-project](https://hosted.w
 
 You should first make sure you have:
 
-- Go 1.20+ installed and in your PATH
+- Go installed and in your PATH (the version in `de.felixnuesse.extract.goVersion` in `gradle.properties`, currently 1.24)
 - Java installed and in your PATH
 - Android SDK command-line tools installed OR the NDK version specified in `gradle.properties`
   installed

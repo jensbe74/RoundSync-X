@@ -719,6 +719,15 @@ public class Rclone {
             Collections.addAll(directionParameter, "copy", remoteSection, localPath);
             directionParameter.addAll(defaultParameter);
             command = createCommandWithOptions(directionParameter);
+        } else if (syncDirection == SyncDirectionObject.COPY_DELETE_OLD_LOCAL_TO_REMOTE) {
+            // First step of copy+delete-old: copy everything. The cleanup is done by deleteOldAfterCopy.
+            Collections.addAll(directionParameter, "copy", localPath, remoteSection);
+            directionParameter.addAll(defaultParameter);
+            command = createCommandWithOptions(directionParameter);
+        } else if (syncDirection == SyncDirectionObject.COPY_DELETE_OLD_REMOTE_TO_LOCAL) {
+            Collections.addAll(directionParameter, "copy", remoteSection, localPath);
+            directionParameter.addAll(defaultParameter);
+            command = createCommandWithOptions(directionParameter);
         }else {
             return null;
         }
@@ -728,6 +737,50 @@ public class Rclone {
             return getRuntimeProcess(command, env);
         } catch (IOException e) {
             FLog.e(TAG, "sync: error starting rclone", e);
+            return null;
+        }
+    }
+
+    /**
+     * Second step of the "copy, then delete old files in the source" task types.
+     * Must only be called after the copy step finished successfully.
+     *
+     * Uses "rclone move --min-age": only source files older than minAge (by modification time)
+     * are touched, and rclone only removes a source file after it was verified at the destination
+     * (or after it was found to be identical there). Always compares checksums, independent of the
+     * task's own checksum setting, so a changed file with an identical size is never deleted unseen.
+     *
+     * @param minAge rclone duration, e.g. "30d" (suffixes: m, h, d, y)
+     */
+    public Process deleteOldAfterCopy(RemoteItem remoteItem, String localPath, String remotePath, int syncDirection, ArrayList<FilterEntry> filters, String minAge) {
+        if (minAge == null || !minAge.matches("[1-9][0-9]*[mhdy]")) {
+            FLog.e(TAG, "deleteOldAfterCopy: invalid min-age '" + minAge + "', refusing to delete");
+            return null;
+        }
+        String remoteName = remoteItem.getName();
+        String localRemotePath = (remoteItem.isRemoteType(RemoteItem.LOCAL)) ? getLocalRemotePathPrefix(remoteItem, context)  + "/" : "";
+        String remoteSection = (remotePath.compareTo("//" + remoteName) == 0) ? remoteName + ":" + localRemotePath : remoteName + ":" + localRemotePath + remotePath;
+
+        ArrayList<String> parameter = new ArrayList<>();
+        if (syncDirection == SyncDirectionObject.COPY_DELETE_OLD_LOCAL_TO_REMOTE) {
+            Collections.addAll(parameter, "move", localPath, remoteSection);
+        } else if (syncDirection == SyncDirectionObject.COPY_DELETE_OLD_REMOTE_TO_LOCAL) {
+            Collections.addAll(parameter, "move", remoteSection, localPath);
+        } else {
+            return null;
+        }
+        Collections.addAll(parameter, "--min-age", minAge, "--checksum", "--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--use-json-log");
+        for (FilterEntry filter : filters) {
+            parameter.add("--filter");
+            parameter.add((filter.filterType == FilterEntry.FILTER_INCLUDE ? "+ " : "- ") + filter.filter);
+        }
+
+        String[] command = createCommandWithOptions(parameter);
+        String[] env = getRcloneEnv();
+        try {
+            return getRuntimeProcess(command, env);
+        } catch (IOException e) {
+            FLog.e(TAG, "deleteOldAfterCopy: error starting rclone", e);
             return null;
         }
     }

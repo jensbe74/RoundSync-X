@@ -36,6 +36,27 @@ public class SyncDirectionObject {
     public static final int SYNC_BIDIRECTIONAL_INITIAL = 5;
     public static final int SYNC_BIDIRECTIONAL = 6;
 
+    // Copy everything first, then delete files older than the task's min-age from the source,
+    // but only if they are verifiably present at the destination.
+    public static final int COPY_DELETE_OLD_LOCAL_TO_REMOTE = 7;
+    public static final int COPY_DELETE_OLD_REMOTE_TO_LOCAL = 8;
+
+    /**
+     * Direction values in the same order as {@link #getOptionsArray(Context)}.
+     * Values 5 and 6 (bisync) are reserved and not selectable.
+     */
+    public static final int[] SELECTABLE_DIRECTIONS = {
+            SYNC_LOCAL_TO_REMOTE,
+            SYNC_REMOTE_TO_LOCAL,
+            COPY_LOCAL_TO_REMOTE,
+            COPY_REMOTE_TO_LOCAL,
+            COPY_DELETE_OLD_LOCAL_TO_REMOTE,
+            COPY_DELETE_OLD_REMOTE_TO_LOCAL
+    };
+
+    public static boolean isCopyDeleteOld(int direction) {
+        return direction == COPY_DELETE_OLD_LOCAL_TO_REMOTE || direction == COPY_DELETE_OLD_REMOTE_TO_LOCAL;
+    }
 
     public static String[] getOptionsArray(Context context) {
         return context.getResources().getStringArray(R.array.sync_direction_array);

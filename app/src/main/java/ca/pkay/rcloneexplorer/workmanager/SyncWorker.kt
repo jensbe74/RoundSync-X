@@ -12,6 +12,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import ca.pkay.rcloneexplorer.Database.DatabaseHandler
 import ca.pkay.rcloneexplorer.Items.RemoteItem
+import ca.pkay.rcloneexplorer.Items.SyncDirectionObject
 import ca.pkay.rcloneexplorer.Items.Task
 import ca.pkay.rcloneexplorer.Log2File
 import ca.pkay.rcloneexplorer.R
@@ -166,12 +167,32 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 taskFilterList,
                 mTask.deleteExcluded
             )
-            handleSync(mTitle)
+            val copyExitCode = handleSync(mTitle)
+
+            // Second step of "copy, then delete old files in source": only after a fully successful copy.
+            if (SyncDirectionObject.isCopyDeleteOld(mTask.direction)
+                && copyExitCode == 0
+                && failureReason == FAILURE_REASON.NO_FAILURE
+            ) {
+                sRcloneProcess = mRclone.deleteOldAfterCopy(
+                    remoteItem,
+                    mTask.localPath,
+                    mTask.remotePath,
+                    mTask.direction,
+                    taskFilterList,
+                    mTask.minAge
+                )
+                handleSync(mTitle)
+            }
             sendUploadFinishedBroadcast(remoteItem.name, mTask.remotePath)
         }
     }
 
-    private fun handleSync(title: String) {
+    /**
+     * @return the exit code of the rclone process, or -1 if there was no process or waiting failed.
+     */
+    private fun handleSync(title: String): Int {
+        var exitCode = -1
         SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_start_sync))
         if (sRcloneProcess != null) {
             val localProcessReference = sRcloneProcess!!
@@ -209,7 +230,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 FLog.e(TAG, "onHandleIntent: error reading stdout", e)
             }
             try {
-                localProcessReference.waitFor()
+                exitCode = localProcessReference.waitFor()
             } catch (e: InterruptedException) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e)
             }
@@ -217,6 +238,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             log("Sync: No Rclone Process!")
         }
         mNotificationManager.cancelSyncNotification(ongoingNotificationID)
+        return exitCode
     }
 
     private fun postSync() {
