@@ -1,12 +1,9 @@
 package ca.pkay.rcloneexplorer.workmanager
 
 import android.app.Notification
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Parcel
 import androidx.annotation.StringRes
@@ -24,6 +21,7 @@ import ca.pkay.rcloneexplorer.notifications.prototypes.WorkerNotification
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
 import ca.pkay.rcloneexplorer.util.FLog
 import ca.pkay.rcloneexplorer.util.SyncLog
+import ca.pkay.rcloneexplorer.util.ConnectivityLossWatcher
 import ca.pkay.rcloneexplorer.util.WifiConnectivitiyUtil
 import de.felixnuesse.extract.extensions.tag
 import de.felixnuesse.extract.notifications.implementations.DownloadWorkerNotification
@@ -93,8 +91,7 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
             mTitle,
             mTitle,
             ArrayList(),
-            0,
-            ongoingNotificationID
+            0
         ))
 
         if (inputData.keyValueMap.containsKey(EPHEMERAL_TYPE)){
@@ -116,10 +113,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
                         val target = inputData.getString(DOWNLOAD_TARGETPATH)
                         val fileItem = getFileitemFromParcel(DOWNLOAD_SOURCE)
 
-                        if(fileItem == null){
-                            log("$DOWNLOAD_SOURCE: No valid target was passed!")
-                            return Result.failure()
-                        }
 
                         sRcloneProcess = Rclone(mContext).downloadFile(
                             remoteItem,
@@ -141,10 +134,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
                         val target = inputData.getString(MOVE_TARGETPATH)
                         val fileItem = getFileitemFromParcel(MOVE_FILE)
 
-                        if(fileItem == null){
-                            log("$MOVE_FILE: No valid target was passed!")
-                            return Result.failure()
-                        }
 
                         sRcloneProcess = Rclone(mContext).moveTo(
                             remoteItem,
@@ -155,10 +144,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
                     Type.DELETE -> {
                         val fileItem = getFileitemFromParcel(DELETE_FILE)
 
-                        if(fileItem == null){
-                            log("$DELETE_FILE: No valid target was passed!")
-                            return Result.failure()
-                        }
 
                         sRcloneProcess = Rclone(mContext).deleteItems(
                             remoteItem,
@@ -191,7 +176,7 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
 
     private fun finishWork() {
         sRcloneProcess?.destroy()
-        mContext.unregisterReceiver(connectivityChangeBroadcastReceiver)
+        connectivityLossWatcher.unregister()
         postSync()
     }
 
@@ -228,8 +213,7 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
                             title,
                             statusObject.notificationContent,
                             statusObject.notificationBigText,
-                            statusObject.notificationPercent,
-                            ongoingNotificationID
+                            statusObject.notificationPercent
                         ))
                     } catch (e: JSONException) {
                         Log.e(tag(), "Error: the offending line: $line")
@@ -298,7 +282,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
         val content = mContext.getString(R.string.operation_failed_cancelled)
         SyncLog.info(mContext, mTitle, content)
         mNotificationManager?.showCancelledNotification(
-            mTitle,
             content,
             notificationId,
             0
@@ -346,7 +329,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
         }
         SyncLog.error(mContext, notifyTitle, "$mTitle: $text")
         mNotificationManager?.showFailedNotification(
-            mTitle,
             text,
             notificationId,
            0
@@ -400,21 +382,15 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
     }
 
     private fun registerBroadcastReceivers() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)
-        mContext.registerReceiver(connectivityChangeBroadcastReceiver, intentFilter)
+        connectivityLossWatcher.register()
     }
 
-    private val connectivityChangeBroadcastReceiver: BroadcastReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if(endNotificationAlreadyPosted){
-                    return
-                }
-                sConnectivityChanged = true
-                failureReason = FAILURE_REASON.CONNECTIVITY_CHANGED
-            }
+    private val connectivityLossWatcher = ConnectivityLossWatcher(mContext) {
+        if (!endNotificationAlreadyPosted) {
+            sConnectivityChanged = true
+            failureReason = FAILURE_REASON.CONNECTIVITY_CHANGED
         }
+    }
 
     private fun getFileitemFromParcel(key: String): FileItem {
 

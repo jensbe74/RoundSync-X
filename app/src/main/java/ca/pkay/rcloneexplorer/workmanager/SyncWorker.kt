@@ -1,12 +1,9 @@
 package ca.pkay.rcloneexplorer.workmanager
 
 import android.app.Notification
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-import android.net.wifi.WifiManager
 import androidx.annotation.StringRes
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
@@ -26,6 +23,7 @@ import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications.Companion.G
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
 import ca.pkay.rcloneexplorer.util.FLog
 import ca.pkay.rcloneexplorer.util.SyncLog
+import ca.pkay.rcloneexplorer.util.ConnectivityLossWatcher
 import ca.pkay.rcloneexplorer.util.WifiConnectivitiyUtil
 import kotlinx.serialization.json.Json
 import org.json.JSONException
@@ -97,8 +95,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             mTitle,
             mTitle,
             ArrayList(),
-            0,
-            ongoingNotificationID
+            0
         ))
 
 
@@ -143,13 +140,15 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
     private fun finishWork() {
         sRcloneProcess?.destroy()
-        mContext.unregisterReceiver(connectivityChangeBroadcastReceiver)
+        connectivityLossWatcher.unregister()
         postSync()
     }
 
     private fun handleTask() {
         mTitle = mTask.title
         mNotificationManager.setCancelId(id)
+        // Tasks only store the numeric remote type, so the legacy constructor is still required here.
+        @Suppress("DEPRECATION")
         val remoteItem = RemoteItem(mTask.remoteId, mTask.remoteType, "")
 
         if (mTask.title == "") {
@@ -197,8 +196,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                             title,
                             statusObject.notificationContent,
                             statusObject.notificationBigText,
-                            statusObject.notificationPercent,
-                            ongoingNotificationID
+                            statusObject.notificationPercent
                         ))
                     } catch (e: JSONException) {
                         FLog.e(TAG, "SyncService-Error: the offending line: $line")
@@ -418,21 +416,15 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     }
 
     private fun registerBroadcastReceivers() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)
-        mContext.registerReceiver(connectivityChangeBroadcastReceiver, intentFilter)
+        connectivityLossWatcher.register()
     }
 
-    private val connectivityChangeBroadcastReceiver: BroadcastReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if(endNotificationAlreadyPosted){
-                    return
-                }
-                sConnectivityChanged = true
-                failureReason = FAILURE_REASON.CONNECTIVITY_CHANGED
-            }
+    private val connectivityLossWatcher = ConnectivityLossWatcher(mContext) {
+        if (!endNotificationAlreadyPosted) {
+            sConnectivityChanged = true
+            failureReason = FAILURE_REASON.CONNECTIVITY_CHANGED
         }
+    }
 
     private fun followupTask(followUpTaskID: Long?) {
         if (followUpTaskID == null || followUpTaskID == -1L) {

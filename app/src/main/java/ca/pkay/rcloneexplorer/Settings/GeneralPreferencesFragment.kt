@@ -168,9 +168,9 @@ class GeneralPreferencesFragment : PreferenceFragmentCompat() {
 
     private fun setAppShortcuts(
         remoteItems: ArrayList<RemoteItem>,
-        appShortcuts: ArrayList<String>
+        selectedShortcuts: ArrayList<String>
     ) {
-        var appShortcuts = appShortcuts
+        var appShortcuts = selectedShortcuts
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
             return
         }
@@ -183,10 +183,10 @@ class GeneralPreferencesFragment : PreferenceFragmentCompat() {
             requireContext()
         )
         val editor = sharedPreferences.edit()
-        val savedAppShortcutIds = sharedPreferences.getStringSet(
+        val savedAppShortcutIds: Set<String> = sharedPreferences.getStringSet(
             getString(R.string.shared_preferences_app_shortcuts),
             HashSet()
-        )
+        ) ?: HashSet()
         val updatedAppShortcutIDds: MutableSet<String> = HashSet(savedAppShortcutIds)
 
         // Remove app shortcuts first

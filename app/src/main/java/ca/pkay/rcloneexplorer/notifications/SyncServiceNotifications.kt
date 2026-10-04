@@ -176,28 +176,11 @@ class SyncServiceNotifications(var mContext: Context) {
         NotificationUtils.createNotification(mContext, notificationId, builder.build())
     }
 
-    @Deprecated("Use with specific notification id")
     fun updateSyncNotification(
         title: String,
         content: String,
         bigTextArray: ArrayList<String>,
         percent: Int
-    ): Notification? {
-        return updateSyncNotification(
-            title,
-            content,
-            bigTextArray,
-            percent,
-            PERSISTENT_NOTIFICATION_ID_FOR_SYNC
-        )
-    }
-
-    fun updateSyncNotification(
-        title: String,
-        content: String,
-        bigTextArray: ArrayList<String>,
-        percent: Int,
-        notificationId: Int
     ): Notification? {
         if(content.isBlank()){
             FLog.e(TAG, "Missing notification content!")

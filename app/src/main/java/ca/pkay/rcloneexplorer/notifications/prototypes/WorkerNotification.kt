@@ -100,7 +100,6 @@ abstract class WorkerNotification(var mContext: Context) {
     }
 
     fun showFailedNotification(
-            title: String,
             content: String,
             notificationId: Int,
             taskid: Long
@@ -129,7 +128,6 @@ abstract class WorkerNotification(var mContext: Context) {
     }
 
     fun showCancelledNotification(
-            title: String,
             content: String,
             notificationId: Int,
             taskid: Long
@@ -178,8 +176,7 @@ abstract class WorkerNotification(var mContext: Context) {
             title: String,
             content: String,
             bigTextArray: ArrayList<String>,
-            percent: Int,
-            notificationId: Int
+            percent: Int
     ): Notification? {
         if (content.isBlank()) {
             FLog.e(tag(), "Missing notification content!")

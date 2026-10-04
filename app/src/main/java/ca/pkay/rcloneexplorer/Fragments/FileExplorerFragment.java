@@ -943,16 +943,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
             moveStartPath = null;
             return;
         }
-        String oldPath = moveList.get(0).getPath();
-        int index = oldPath.lastIndexOf(moveList.get(0).getName());
-        String path2;
-        if (index > 0) {
-            path2 = moveList.get(0).getPath().substring(0, index - 1);
-        } else {
-            path2 = "//" + remoteName;
-        }
         for (FileItem moveItem : moveList) {
-            EphemeralTaskManager.Companion.queueMove(this.context, remote, directoryObject.getCurrentPath(), moveItem, path2);
+            EphemeralTaskManager.Companion.queueMove(this.context, remote, directoryObject.getCurrentPath(), moveItem);
         }
         Toasty.info(context, getString(R.string.moving_info), Toast.LENGTH_SHORT, true).show();
         moveList.clear();
@@ -1464,7 +1456,7 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
                 .setPositiveButton(getResources().getString(R.string.delete), (dialog, which) -> {
                     recyclerViewAdapter.cancelSelection();
                     for (FileItem deleteItem : deleteList) {
-                        EphemeralTaskManager.Companion.queueDelete(this.context, remote, deleteItem, directoryObject.getCurrentPath());
+                        EphemeralTaskManager.Companion.queueDelete(this.context, remote, deleteItem);
                     }
                     Toasty.info(context, getString(R.string.deleting_info), Toast.LENGTH_SHORT, true).show();
                 });

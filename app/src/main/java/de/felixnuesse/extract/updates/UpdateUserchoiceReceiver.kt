@@ -41,7 +41,7 @@ class UpdateUserchoiceReceiver : BroadcastReceiver() {
             val version = preferenceManager.getString(versionKey,"")?: ""
 
             // the following might be superfluous. keep it for universal fallback.
-            var abi = when(Build.CPU_ABI) {
+            var abi = when(Build.SUPPORTED_ABIS.firstOrNull()) {
                 "x86" -> "x86"
                 "x86_64" -> "x86_64"
                 "arm64-v8a" -> "arm64-v8a"
