@@ -6,7 +6,7 @@
 
 A cloud file manager, powered by rclone.
 
-> **Fork notice:** RoundSync X is a fork of [newhinton/Round-Sync](https://github.com/newhinton/Round-Sync), maintained by [jensbe74](https://github.com/jensbe74). It adds the task type [Copy + delete old files](#copy--delete-old-files-fork-addition). The in-app *About* screen shows this fork information as well.
+> **Fork notice:** RoundSync X is a fork of [newhinton/Round-Sync](https://github.com/newhinton/Round-Sync), maintained by [jensbe74](https://github.com/jensbe74). It is developed independently and is not meant to be merged back into the original. It adds the task type [Copy + delete old files](#copy--delete-old-files-fork-addition). The in-app *About* screen shows this fork information as well.
 Visit [https://roundsync.com](https://roundsync.com) for more information!
 
 
@@ -54,7 +54,7 @@ Grab the [latest version](https://github.com/jensbe74/RoundSync-X/releases/lates
 |Intel/AMD 32 Bit | some TV boxes and tablets | ```x86``` |
 |Intel/AMD 64 Bit | some emulators | ```x86_64``` |
 
-If you don't know which version to pick use ```roundsync-<version>-universal-release.apk```. Most devices run ARM 64 Bit, and 64 Bit devices often can also run the respective 32 bit version at lower performance. The app runs on any phone, tablet or TV with Android 7 or newer, as long as you have a touchscreen or mouse.
+If you don't know which version to pick use ```roundsyncx-<version>-universal-release.apk```. Most devices run ARM 64 Bit, and 64 Bit devices often can also run the respective 32 bit version at lower performance. The app runs on any phone, tablet or TV with Android 7 or newer, as long as you have a touchscreen or mouse.
 
 The F-Droid and IzzyOnDroid builds are the original app by newhinton and do **not** include the fork additions. This fork is only distributed through its [GitHub releases](https://github.com/jensbe74/RoundSync-X/releases); the in-app update check and the *Report a bug* link also point to this fork.
 
