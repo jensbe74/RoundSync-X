@@ -4,7 +4,7 @@
                                                      xmlns:tools="http://schemas.android.com/tools"
                                                      android:layout_width="match_parent"
                                                      android:layout_height="match_parent"
-                                                     tools:context="ca.pkay.rcloneexplorer.Activities.MainActivity">
+                                                     tools:context="io.github.jensbe74.roundsyncx.explorer.Activities.MainActivity">
 
 
     <com.google.android.material.appbar.AppBarLayout
@@ -95,7 +95,7 @@
             </com.google.android.material.card.MaterialCardView>
         </FrameLayout>
 
-        <de.felixnuesse.ui.BreadcrumbView
+        <io.github.jensbe74.roundsyncx.ui.BreadcrumbView
             android:id="@+id/breadcrumb_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

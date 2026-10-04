@@ -28,8 +28,8 @@
 -dontwarn okhttp3.internal.platform.ConscryptPlatform
 
 # keep model classes
-# -keep public class ca.pkay.rcloneexplorer.RcloneRcd.*
--keep class ca.pkay.rcloneexplorer.** { *; }
+# -keep public class io.github.jensbe74.roundsyncx.explorer.RcloneRcd.*
+-keep class io.github.jensbe74.roundsyncx.explorer.** { *; }
 
 
 -dontwarn org.bouncycastle.jsse.BCSSLParameters

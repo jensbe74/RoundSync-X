@@ -82,7 +82,7 @@ The intent needs the following:
 | Intent          |                   Content                   |                 |
 |:----------------|:-------------------------------------------:|----------------:|
 | packageName     |     io.github.jensbe74.roundsyncx          |                 |
-| className       | ca.pkay.rcloneexplorer.Services.SyncService |                 |
+| className       | io.github.jensbe74.roundsyncx.explorer.Services.SyncService |                 |
 | Action          |                 START_TASK                  |                 |
 | Integer Extra   |                    task                     |        idOfTask |
 | Boolean Extra   |                notification                 |   true or false |
@@ -109,7 +109,7 @@ If you want to add more translations, see our [weblate-project](https://hosted.w
 
 ## Developing
 
-The application id is `io.github.jensbe74.roundsyncx`, so RoundSync X can be installed alongside the original Round Sync.
+The application id is `io.github.jensbe74.roundsyncx`, so RoundSync X can be installed alongside the original Round Sync. The code lives in the packages `io.github.jensbe74.roundsyncx.explorer`, `.core` and `.ui`.
 
 You should first make sure you have:
 

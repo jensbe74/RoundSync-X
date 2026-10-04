@@ -36,7 +36,7 @@
         tools:ignore="GoogleAppIndexingWarning,MissingTvBanner"
         tools:targetApi="33">
         <receiver
-            android:name="de.felixnuesse.extract.updates.UpdateUserchoiceReceiver"
+            android:name="io.github.jensbe74.roundsyncx.core.updates.UpdateUserchoiceReceiver"
             android:enabled="true"
             android:exported="true" />
 
